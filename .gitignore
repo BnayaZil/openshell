@@ -6,3 +6,4 @@ dist/
 .agents/skills/
 .cursor/skills/
 .cursor/skills-cursor/
+sessions/

@@ -1,8 +1,13 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadSessionFile, saveSessionFile, SESSION_FILE_NAME } from "../src/tuiSessionStore";
+import {
+  loadSessionFile,
+  saveSessionFile,
+  SESSIONS_DIRECTORY_NAME,
+  SESSION_FILE_NAME,
+} from "../src/tuiSessionStore";
 import type { PersistedTuiSession } from "../src/tuiState";
 
 function sampleSession(): PersistedTuiSession {
@@ -44,7 +49,9 @@ describe("tuiSessionStore", () => {
 
   it("returns warning on invalid json", async () => {
     const dir = await mkdtemp(join(tmpdir(), "openshell-tui-"));
-    await writeFile(join(dir, SESSION_FILE_NAME), "{invalid json", "utf8");
+    const sessionsDir = join(dir, SESSIONS_DIRECTORY_NAME);
+    await mkdir(sessionsDir, { recursive: true });
+    await writeFile(join(sessionsDir, SESSION_FILE_NAME), "{invalid json", "utf8");
 
     const loaded = await loadSessionFile(dir);
     expect(loaded.session).toBeUndefined();

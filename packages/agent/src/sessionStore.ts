@@ -1,9 +1,10 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PersistedAgentSession } from "./session.js";
 import { isObject } from "./shared.js";
 
 export const DEFAULT_SESSION_FILE_NAME = ".openshell-tui-session.json";
+export const SESSIONS_DIRECTORY = "sessions";
 
 export type SessionLoadResult = {
   session?: PersistedAgentSession;
@@ -37,7 +38,7 @@ function resolveSessionFileName(sessionId?: string): string {
 }
 
 function sessionPath(cwd: string, sessionId?: string): string {
-  return join(cwd, resolveSessionFileName(sessionId));
+  return join(cwd, SESSIONS_DIRECTORY, resolveSessionFileName(sessionId));
 }
 
 export async function loadSessionFile(cwd: string, sessionId?: string): Promise<SessionLoadResult> {
@@ -59,5 +60,6 @@ export async function loadSessionFile(cwd: string, sessionId?: string): Promise<
 
 export async function saveSessionFile(cwd: string, session: PersistedAgentSession, sessionId?: string): Promise<void> {
   const target = sessionPath(cwd, sessionId);
+  await mkdir(join(cwd, SESSIONS_DIRECTORY), { recursive: true });
   await writeFile(target, `${JSON.stringify(session, null, 2)}\n`, "utf8");
 }
