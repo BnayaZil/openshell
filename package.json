@@ -1,0 +1,35 @@
+{
+  "name": "openshell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/agent",
+    "packages/tui"
+  ],
+  "scripts": {
+    "build": "npm run build -w @openshell/agent && npm run build -w @openshell/tui",
+    "test": "npm run test -w @openshell/agent && npm run test -w @openshell/tui",
+    "agent:build": "npm run build -w @openshell/agent",
+    "agent:run": "npm run build -w @openshell/agent && node packages/agent/dist/example.js",
+    "agent:tui": "npm run build && node packages/tui/dist/tui.js",
+    "agent:server": "npm run build -w @openshell/agent && node packages/agent/dist/server.js"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.16",
+    "@ai-sdk/openai-compatible": "^1.0.33",
+    "ai": "^5.0.74",
+    "dotenv": "^17.3.1",
+    "ink": "^6.6.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.4",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.2.13",
+    "ink-testing-library": "^4.0.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

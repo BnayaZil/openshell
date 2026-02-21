@@ -1,0 +1,26 @@
+{
+  "name": "@openshell/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/example.js",
+  "types": "./dist/example.d.ts",
+  "exports": {
+    "./server": "./dist/server.js",
+    "./session": "./dist/session.js",
+    "./loop": "./dist/loop.js",
+    "./llmClient": "./dist/llmClient.js",
+    "./example": "./dist/example.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.16",
+    "@ai-sdk/openai-compatible": "^1.0.33",
+    "ai": "^5.0.74",
+    "dotenv": "^17.3.1",
+    "zod": "^4.1.5"
+  }
+}

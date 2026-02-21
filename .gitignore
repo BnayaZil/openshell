@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+
+# Agent skills
+.agents/skills/
+.cursor/skills/
+.cursor/skills-cursor/
