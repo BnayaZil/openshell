@@ -13,7 +13,12 @@
     "agent:build": "npm run build -w @openshell/agent",
     "agent:run": "npm run build -w @openshell/agent && node packages/agent/dist/example.js",
     "agent:tui": "npm run build && node packages/tui/dist/tui.js",
-    "agent:server": "npm run build -w @openshell/agent && node packages/agent/dist/server.js"
+    "agent:server": "npm run build -w @openshell/agent && node packages/agent/dist/server.js",
+    "wt:new": "bash scripts/worktrees.sh new",
+    "wt:new:objective": "bash scripts/worktrees.sh objective",
+    "wt:ls": "bash scripts/worktrees.sh ls",
+    "wt:rm": "bash scripts/worktrees.sh rm",
+    "wt:sync-main": "bash scripts/worktrees.sh sync-main"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.16",
