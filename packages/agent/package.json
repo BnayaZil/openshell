@@ -10,6 +10,7 @@
     "./session": "./dist/session.js",
     "./loop": "./dist/loop.js",
     "./llmClient": "./dist/llmClient.js",
+    "./shared": "./dist/shared.js",
     "./example": "./dist/example.js"
   },
   "scripts": {
