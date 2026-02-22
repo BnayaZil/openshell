@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { runAgent } from "./loop.js";
 import { createZenThink } from "./llmClient.js";
-import { parseErrorMessage, readEnv, readObservationMode } from "./shared.js";
+import { parseErrorMessage, readEnv, readGogIntegrationStatus, readObservationMode } from "./shared.js";
 
 function createLogger(enabled: boolean): (event: string, payload: unknown) => void {
   return (event, payload) => {
@@ -23,6 +23,7 @@ async function main(): Promise<void> {
     model: process.env["OPENCODE_ZEN_MODEL"] ?? "gpt-4.1-mini",
     cwd: process.cwd(),
     observationMode: readObservationMode(process.env, "summary"),
+    gogStatus: readGogIntegrationStatus(),
     logger,
   });
 

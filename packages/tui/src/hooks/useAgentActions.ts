@@ -19,10 +19,14 @@ type UseAgentActionsInput = {
   setState: React.Dispatch<React.SetStateAction<AgentSessionState>>;
 };
 
+const GOG_SETUP_SHORTCUT_PROMPT =
+  "Set up gog integration for this workspace. First check whether gog is installed and authenticated, then provide exact next commands needed to complete setup. Do not install anything without explicit approval.";
+
 export function useAgentActions(input: UseAgentActionsInput): {
   submitCurrentInput: () => void;
   cancelActiveTurn: () => Promise<void>;
   startNewSession: () => Promise<void>;
+  initiateGogSetup: () => Promise<void>;
 } {
   const { refs, setInputDraft, setSessionId, setState } = input;
 
@@ -85,9 +89,28 @@ export function useAgentActions(input: UseAgentActionsInput): {
     }
   }, [refs.serverUrlRef, refs.stateRef, reportError, setInputDraft, setSessionId, setState]);
 
+  const initiateGogSetup = useCallback(async (): Promise<void> => {
+    if (refs.stateRef.current.isRunning || !refs.serverUrlRef.current) {
+      setInputDraft(GOG_SETUP_SHORTCUT_PROMPT);
+      return;
+    }
+
+    try {
+      const submitted = await submitPromptText(GOG_SETUP_SHORTCUT_PROMPT);
+      if (submitted) {
+        setInputDraft("");
+        return;
+      }
+      setInputDraft(GOG_SETUP_SHORTCUT_PROMPT);
+    } catch (error) {
+      reportError("Gog setup shortcut failed: ", error);
+    }
+  }, [refs.serverUrlRef, refs.stateRef, reportError, setInputDraft, submitPromptText]);
+
   return {
     submitCurrentInput,
     cancelActiveTurn,
     startNewSession,
+    initiateGogSetup,
   };
 }

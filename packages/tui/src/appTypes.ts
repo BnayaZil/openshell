@@ -1,3 +1,5 @@
+import type { GogIntegrationStatus } from "@openshell/agent/shared";
+
 export type AgentTuiAppProps = {
   initialObjective: string;
   autoStart: boolean;
@@ -7,4 +9,5 @@ export type AgentTuiAppProps = {
   apiKey: string | undefined;
   baseURL: string | undefined;
   serverUrl: string | undefined;
+  gogStatus?: GogIntegrationStatus;
 };

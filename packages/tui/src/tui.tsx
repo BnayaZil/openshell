@@ -3,6 +3,7 @@ import React from "react";
 import { render } from "ink";
 import { createZenThink } from "@openshell/agent/llmClient";
 import { runAgent } from "@openshell/agent/loop";
+import { readGogIntegrationStatus } from "@openshell/agent/shared";
 import { AgentTuiApp } from "./AgentTuiApp.js";
 import { readEnv, readInitialObjective, readObservationMode } from "./config.js";
 import { parseErrorMessage } from "./protocol.js";
@@ -10,6 +11,7 @@ import { parseErrorMessage } from "./protocol.js";
 async function main(): Promise<void> {
   try {
     const initialObjective = readInitialObjective();
+    const gogStatus = readGogIntegrationStatus();
     if (!process.stdin.isTTY) {
       const think = createZenThink({
         apiKey: readEnv("OPENCODE_ZEN_API_KEY"),
@@ -17,6 +19,7 @@ async function main(): Promise<void> {
         model: process.env["OPENCODE_ZEN_MODEL"] ?? "gpt-4.1-mini",
         cwd: process.cwd(),
         observationMode: readObservationMode(),
+        gogStatus,
       });
 
       const result = await runAgent({
@@ -40,6 +43,7 @@ async function main(): Promise<void> {
         apiKey={process.env["AGENT_SERVER_URL"] ? undefined : readEnv("OPENCODE_ZEN_API_KEY")}
         baseURL={process.env["AGENT_SERVER_URL"] ? undefined : readEnv("OPENCODE_ZEN_BASE_URL")}
         serverUrl={process.env["AGENT_SERVER_URL"]}
+        gogStatus={gogStatus}
       />,
     );
 
