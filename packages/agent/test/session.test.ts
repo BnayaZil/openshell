@@ -70,6 +70,24 @@ describe("session core", () => {
     expect(next.messages[next.messages.length - 1]!.content).toBe("hello there");
   });
 
+  it("keeps multi-line response block in assistant message", () => {
+    const state = createInitialSessionState({
+      cwd: process.cwd(),
+      model: "test-model",
+    });
+    const started = beginTurn(state, "show full response");
+
+    const next = applyTurnResult(started.state, started.turnId, {
+      status: "finished",
+      result:
+        "Objective: x\nResponse: line one\n\nline two\nline three\nWork summary: y\nKey outputs:\n- out",
+      steps: [],
+      observations: [],
+    });
+
+    expect(next.messages[next.messages.length - 1]!.content).toBe("line one\n\nline two\nline three");
+  });
+
   it("marks cancelled turn status from agent result", () => {
     const state = createInitialSessionState({
       cwd: process.cwd(),
