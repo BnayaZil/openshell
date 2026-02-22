@@ -24,8 +24,8 @@ describe("tuiComponents", () => {
       />,
     );
 
-    expect(view.lastFrame()).toContain("Gog: ready");
-    expect(view.lastFrame()).toContain("Gog Proxy:");
+    expect(view.lastFrame()).toContain("Gog Setup: ready");
+    expect(view.lastFrame()).toContain("Gog Runtime:");
     expect(view.lastFrame()).not.toContain("Ctrl+G: gog setup");
   });
 
@@ -48,6 +48,7 @@ describe("tuiComponents", () => {
       />,
     );
 
+    expect(view.lastFrame()).toContain("Gog Setup: setup required");
     expect(view.lastFrame()).toContain("Ctrl+G: gog setup");
   });
 });

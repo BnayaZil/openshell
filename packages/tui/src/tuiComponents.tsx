@@ -96,6 +96,27 @@ const DEFAULT_GOG_STATUS: GogIntegrationStatus = {
   skillConfigured: false,
 };
 
+function gogSetupReady(status: GogIntegrationStatus): boolean {
+  return status.integrationStatus === "ready" && status.skillConfigured && Boolean(status.proxyUrl);
+}
+
+function gogSetupSummary(status: GogIntegrationStatus): string {
+  if (gogSetupReady(status)) {
+    return "ready";
+  }
+  const missing: string[] = [];
+  if (status.integrationStatus !== "ready") {
+    missing.push("status");
+  }
+  if (!status.proxyUrl) {
+    missing.push("proxy");
+  }
+  if (!status.skillConfigured) {
+    missing.push("skill");
+  }
+  return `setup required (${missing.join(", ")})`;
+}
+
 function SectionCard({
   title,
   children,
@@ -129,12 +150,11 @@ const HeaderView = memo(function HeaderView({
         {lastTurn ? `| last turn: ${lastTurn.status}` : ""}
       </Text>
       <Text>
-        <Text color="cyan">Gog:</Text> {gogStatus.integrationStatus} | pull {gogStatus.pullModeEnabled ? "on" : "off"} |
-        subscribe {gogStatus.subscribeModeEnabled ? "on" : "off"}
+        <Text color="cyan">Gog Setup:</Text> {gogSetupSummary(gogStatus)}
       </Text>
       <Text>
-        <Text color="cyan">Gog Proxy:</Text> {gogStatus.proxyUrl ?? "not set"} | skill{" "}
-        {gogStatus.skillConfigured ? "configured" : "missing"}
+        <Text color="cyan">Gog Runtime:</Text> pull {gogStatus.pullModeEnabled ? "enabled" : "disabled"} | subscribe{" "}
+        {gogStatus.subscribeModeEnabled ? "enabled" : "disabled"} | proxy {gogStatus.proxyUrl ?? "not set"}
       </Text>
     </SectionCard>
   );
@@ -235,8 +255,7 @@ const InputView = memo(function InputView({
 const FooterView = memo(function FooterView({}: Record<string, never>): React.JSX.Element {
   const technicalOutput = useTechnicalOutput();
   const gogStatus = useGogStatus();
-  const showGogShortcut =
-    gogStatus.integrationStatus !== "ready" || !gogStatus.skillConfigured || !gogStatus.proxyUrl;
+  const showGogShortcut = !gogSetupReady(gogStatus);
   return (
     <SectionCard title="Help">
       <Text color="gray">{showGogShortcut ? `${BASE_HELP_TEXT} | Ctrl+G: gog setup` : BASE_HELP_TEXT}</Text>

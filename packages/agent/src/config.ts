@@ -10,7 +10,7 @@ export type AgentConfig = {
 };
 
 export const defaultAgentConfig: AgentConfig = {
-  maxSteps: 10,
+  maxSteps: 30,
   defaultTimeoutMs: 30_000,
   maxStdoutBytes: 32_000,
   maxStderrBytes: 32_000,
