@@ -5,8 +5,6 @@ import { firstMeaningfulLine, truncateByChars } from "./text.js";
 const PREVIEW_MAX_CHARS = 120;
 const ROLLING_SUMMARY_ITEM_MAX_CHARS = 90;
 const ROLLING_SUMMARY_MAX_CHARS = 1200;
-const COMMAND_OUTPUT_STORE_MAX_CHARS = 5_000;
-const RESPONSE_LINE_FALLBACK_MAX_CHARS = 240;
 const RECENT_COMMAND_SUMMARY_COUNT = 3;
 const RECENT_TURNS_FOR_SUMMARY = 3;
 const DEFAULT_MAX_MESSAGES = 80;
@@ -214,14 +212,30 @@ function buildRecentCommandSummary(turn: ChatTurn | undefined): string {
 }
 
 function parseResponseLine(resultText: string): string {
-  const line = resultText
-    .split("\n")
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith("Response:"));
-  if (!line) {
-    return truncateByChars(resultText, RESPONSE_LINE_FALLBACK_MAX_CHARS);
+  const lines = resultText.split("\n");
+  const responseLineIndex = lines.findIndex((entry) => entry.trim().startsWith("Response:"));
+  if (responseLineIndex === -1) {
+    return resultText.trim();
   }
-  return line.replace(/^Response:\s*/, "");
+
+  const responseBlock: string[] = [];
+  for (let index = responseLineIndex; index < lines.length; index += 1) {
+    const rawLine = lines[index];
+    if (rawLine === undefined) {
+      continue;
+    }
+    const trimmed = rawLine.trim();
+    if (index > responseLineIndex && trimmed.startsWith("Work summary:")) {
+      break;
+    }
+    if (index === responseLineIndex) {
+      responseBlock.push(trimmed.replace(/^Response:\s*/, ""));
+      continue;
+    }
+    responseBlock.push(rawLine);
+  }
+
+  return responseBlock.join("\n").trim();
 }
 
 function buildRollingSummary(state: AgentSessionState): string {
@@ -361,8 +375,8 @@ export function reduceAgentLogEvent(state: AgentSessionState, event: AgentLogEve
       timedOut: payload.commandResult?.timedOut === true,
       stdoutPreview: previews.stdoutPreview,
       stderrPreview: previews.stderrPreview,
-      stdout: truncateByChars(stdout, COMMAND_OUTPUT_STORE_MAX_CHARS),
-      stderr: truncateByChars(stderr, COMMAND_OUTPUT_STORE_MAX_CHARS),
+      stdout,
+      stderr,
       ...(typeof payload.step === "number" ? { step: payload.step } : {}),
     };
     const updated = updateActiveTurn(state, (turn) => ({

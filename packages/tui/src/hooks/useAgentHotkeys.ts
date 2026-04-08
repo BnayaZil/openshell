@@ -6,11 +6,13 @@ type UseAgentHotkeysInput = {
   toggleTechnicalOutput: () => void;
   cancelActiveTurn: () => Promise<void>;
   startNewSession: () => Promise<void>;
+  initiateGogSetup: () => Promise<void>;
+  canInitiateGogSetup: boolean;
   onError: (prefix: string, error: unknown) => void;
 };
 
 export function useAgentHotkeys(input: UseAgentHotkeysInput): void {
-  const { cancelActiveTurn, exit, onError, startNewSession, toggleTechnicalOutput } = input;
+  const { cancelActiveTurn, canInitiateGogSetup, exit, initiateGogSetup, onError, startNewSession, toggleTechnicalOutput } = input;
 
   const handleInput = useCallback(
     (value: string, key: { ctrl: boolean }) => {
@@ -36,9 +38,14 @@ export function useAgentHotkeys(input: UseAgentHotkeysInput): void {
 
       if (key.ctrl && value === "n") {
         void startNewSession();
+        return;
+      }
+
+      if (key.ctrl && value === "g" && canInitiateGogSetup) {
+        void initiateGogSetup().catch((error) => onError("Gog setup shortcut failed: ", error));
       }
     },
-    [cancelActiveTurn, exit, onError, startNewSession, toggleTechnicalOutput],
+    [cancelActiveTurn, canInitiateGogSetup, exit, initiateGogSetup, onError, startNewSession, toggleTechnicalOutput],
   );
 
   useInput(handleInput);

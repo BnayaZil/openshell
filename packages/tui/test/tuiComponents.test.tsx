@@ -1,6 +1,60 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { render } from "ink-testing-library";
+import { createInitialSessionState } from "@openshell/agent/session";
+import { AgentTuiView } from "../src/tuiComponents";
+
+describe("tuiComponents", () => {
+  it("renders gog integration status in header", () => {
+    const state = createInitialSessionState({ cwd: "/tmp", model: "gpt-4.1-mini" });
+    const view = render(
+      <AgentTuiView
+        state={state}
+        inputValue=""
+        onInputChange={() => undefined}
+        onSubmitInput={() => undefined}
+        showTechnical={false}
+        gogStatus={{
+          integrationStatus: "ready",
+          pullModeEnabled: true,
+          subscribeModeEnabled: true,
+          proxyUrl: "http://127.0.0.1:8791",
+          skillConfigured: true,
+        }}
+      />,
+    );
+
+    expect(view.lastFrame()).toContain("Gog Setup: ready");
+    expect(view.lastFrame()).toContain("Gog Runtime:");
+    expect(view.lastFrame()).not.toContain("Ctrl+G: gog setup");
+  });
+
+  it("shows gog setup shortcut hint when gog is not configured", () => {
+    const state = createInitialSessionState({ cwd: "/tmp", model: "gpt-4.1-mini" });
+    const view = render(
+      <AgentTuiView
+        state={state}
+        inputValue=""
+        onInputChange={() => undefined}
+        onSubmitInput={() => undefined}
+        showTechnical={false}
+        gogStatus={{
+          integrationStatus: "unknown",
+          pullModeEnabled: true,
+          subscribeModeEnabled: false,
+          proxyUrl: undefined,
+          skillConfigured: false,
+        }}
+      />,
+    );
+
+    expect(view.lastFrame()).toContain("Gog Setup: setup required");
+    expect(view.lastFrame()).toContain("Ctrl+G: gog setup");
+  });
+});
+import React from "react";
+import { describe, expect, it } from "vitest";
+import { render } from "ink-testing-library";
 import { AgentTuiView } from "../src/tuiComponents";
 
 type TuiState = React.ComponentProps<typeof AgentTuiView>["state"];

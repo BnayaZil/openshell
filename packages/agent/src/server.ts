@@ -2,7 +2,7 @@ import "dotenv/config";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createZenThink } from "./llmClient.js";
 import { runAgent } from "./loop.js";
-import { isObject, parseErrorMessage, readEnv, readObservationMode } from "./shared.js";
+import { isObject, parseErrorMessage, readEnv, readGogIntegrationStatus, readObservationMode } from "./shared.js";
 import {
   appendSystemMessage,
   applyTurnError,
@@ -161,6 +161,7 @@ export async function startAgentServer(options: AgentServerOptions): Promise<Run
           model: options.model,
           cwd: options.cwd,
           observationMode: options.observationMode,
+          gogStatus: readGogIntegrationStatus(),
           logger,
         });
         const result = await runAgent({

@@ -2,6 +2,7 @@ import React, { createContext, memo, useContext, useMemo } from "react";
 import { Box, Text } from "ink";
 import TextInput from "ink-text-input";
 import type { AgentSessionState, ChatMessage, ChatTurn, CommandEntry } from "@openshell/agent/session";
+import type { GogIntegrationStatus } from "@openshell/agent/shared";
 
 function roleLabel(role: ChatMessage["role"]): string {
   if (role === "user") {
@@ -43,6 +44,7 @@ type ViewInputContextValue = {
 const SessionStateContext = createContext<AgentSessionState | undefined>(undefined);
 const ViewInputContext = createContext<ViewInputContextValue | undefined>(undefined);
 const TechnicalOutputContext = createContext<boolean | undefined>(undefined);
+const GogStatusContext = createContext<GogIntegrationStatus | undefined>(undefined);
 
 function useSessionState(): AgentSessionState {
   const value = useContext(SessionStateContext);
@@ -68,16 +70,52 @@ function useTechnicalOutput(): boolean {
   return value;
 }
 
+function useGogStatus(): GogIntegrationStatus {
+  const value = useContext(GogStatusContext);
+  if (!value) {
+    throw new Error("GogStatusContext provider is missing.");
+  }
+  return value;
+}
+
 const NO_MESSAGES_PLACEHOLDER = <Text color="gray">No messages yet. Type a request below.</Text>;
 const NO_COMMANDS_PLACEHOLDER = <Text color="gray">No commands yet.</Text>;
 const WAITING_COMMAND_OUTPUT_PLACEHOLDER = <Text color="gray">Waiting for command output...</Text>;
 const INPUT_LOCKED_PLACEHOLDER = (
   <Text color="gray">Assistant is running. Wait for completion to send another prompt.</Text>
 );
-const HELP_TEXT =
+const BASE_HELP_TEXT =
   "Enter: send prompt | Ctrl+K: cancel run | Ctrl+T: toggle full stdout/stderr | Ctrl+N: new chat | Ctrl+Q: quit";
 const VISIBLE_TRANSCRIPT_MESSAGES = 12;
 const VISIBLE_TURN_COMMANDS = 12;
+const DEFAULT_GOG_STATUS: GogIntegrationStatus = {
+  integrationStatus: "unknown",
+  pullModeEnabled: true,
+  subscribeModeEnabled: false,
+  proxyUrl: undefined,
+  skillConfigured: false,
+};
+
+function gogSetupReady(status: GogIntegrationStatus): boolean {
+  return status.integrationStatus === "ready" && status.skillConfigured && Boolean(status.proxyUrl);
+}
+
+function gogSetupSummary(status: GogIntegrationStatus): string {
+  if (gogSetupReady(status)) {
+    return "ready";
+  }
+  const missing: string[] = [];
+  if (status.integrationStatus !== "ready") {
+    missing.push("status");
+  }
+  if (!status.proxyUrl) {
+    missing.push("proxy");
+  }
+  if (!status.skillConfigured) {
+    missing.push("skill");
+  }
+  return `setup required (${missing.join(", ")})`;
+}
 
 function SectionCard({
   title,
@@ -97,6 +135,7 @@ function SectionCard({
 const HeaderView = memo(function HeaderView({
 }: Record<string, never>): React.JSX.Element {
   const state = useSessionState();
+  const gogStatus = useGogStatus();
   const lastTurn = state.turns[state.turns.length - 1];
   return (
     <SectionCard title="Chat Session">
@@ -109,6 +148,13 @@ const HeaderView = memo(function HeaderView({
       <Text>
         <Text color="cyan">Status:</Text> {state.isRunning ? "running" : "ready"}{" "}
         {lastTurn ? `| last turn: ${lastTurn.status}` : ""}
+      </Text>
+      <Text>
+        <Text color="cyan">Gog Setup:</Text> {gogSetupSummary(gogStatus)}
+      </Text>
+      <Text>
+        <Text color="cyan">Gog Runtime:</Text> pull {gogStatus.pullModeEnabled ? "enabled" : "disabled"} | subscribe{" "}
+        {gogStatus.subscribeModeEnabled ? "enabled" : "disabled"} | proxy {gogStatus.proxyUrl ?? "not set"}
       </Text>
     </SectionCard>
   );
@@ -208,9 +254,11 @@ const InputView = memo(function InputView({
 
 const FooterView = memo(function FooterView({}: Record<string, never>): React.JSX.Element {
   const technicalOutput = useTechnicalOutput();
+  const gogStatus = useGogStatus();
+  const showGogShortcut = !gogSetupReady(gogStatus);
   return (
     <SectionCard title="Help">
-      <Text color="gray">{HELP_TEXT}</Text>
+      <Text color="gray">{showGogShortcut ? `${BASE_HELP_TEXT} | Ctrl+G: gog setup` : BASE_HELP_TEXT}</Text>
       <Text color="gray">Technical output: {technicalOutput ? "on" : "off"}</Text>
     </SectionCard>
   );
@@ -222,12 +270,14 @@ export function AgentTuiView({
   onInputChange,
   onSubmitInput,
   showTechnical,
+  gogStatus,
 }: {
   state: AgentSessionState;
   inputValue: string;
   onInputChange: (value: string) => void;
   onSubmitInput: () => void;
   showTechnical: boolean;
+  gogStatus?: GogIntegrationStatus;
 }): React.JSX.Element {
   const inputContext = useMemo<ViewInputContextValue>(
     () => ({
@@ -242,13 +292,15 @@ export function AgentTuiView({
     <SessionStateContext.Provider value={state}>
       <ViewInputContext.Provider value={inputContext}>
         <TechnicalOutputContext.Provider value={showTechnical}>
-          <Box flexDirection="column">
-            <HeaderView />
-            <TranscriptView />
-            <CommandLogView />
-            <InputView />
-            <FooterView />
-          </Box>
+          <GogStatusContext.Provider value={gogStatus ?? DEFAULT_GOG_STATUS}>
+            <Box flexDirection="column">
+              <HeaderView />
+              <TranscriptView />
+              <CommandLogView />
+              <InputView />
+              <FooterView />
+            </Box>
+          </GogStatusContext.Provider>
         </TechnicalOutputContext.Provider>
       </ViewInputContext.Provider>
     </SessionStateContext.Provider>

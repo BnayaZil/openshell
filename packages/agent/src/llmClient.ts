@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { Observation } from "./contracts.js";
 import type { ThinkFn } from "./loop.js";
 import { parseErrorMessage } from "./shared.js";
+import type { GogIntegrationStatus } from "./shared.js";
 
 const decisionSchema = z.discriminatedUnion("type", [
   z.object({
@@ -28,6 +29,7 @@ export type ZenThinkConfig = {
   maxObservationsForPrompt?: number;
   observationMode?: "summary" | "full";
   systemPrompt?: string;
+  gogStatus?: GogIntegrationStatus;
   logger?: (event: string, payload: unknown) => void;
 };
 
@@ -67,6 +69,7 @@ type DynamicEnvironmentInput = {
   platform?: NodeJS.Platform;
   shell?: string;
   now?: Date;
+  gogStatus?: GogIntegrationStatus;
 };
 
 function isGitRepo(cwd: string): boolean {
@@ -85,6 +88,16 @@ export function buildDynamicEnvironmentPrompt(input: DynamicEnvironmentInput): s
   const shell = input.shell ?? process.env["SHELL"] ?? "unknown";
   const now = input.now ?? new Date();
   const inGitRepo = isGitRepo(input.cwd) ? "yes" : "no";
+  const gogStatus = input.gogStatus;
+  const gogLines = gogStatus
+    ? [
+        `  Gog integration status: ${gogStatus.integrationStatus}`,
+        `  Gog pull mode enabled: ${gogStatus.pullModeEnabled ? "yes" : "no"}`,
+        `  Gog subscribe mode enabled: ${gogStatus.subscribeModeEnabled ? "yes" : "no"}`,
+        `  Gog proxy url: ${gogStatus.proxyUrl ?? "not set"}`,
+        `  Gog skill configured: ${gogStatus.skillConfigured ? "yes" : "no"}`,
+      ]
+    : [];
 
   return [
     `You are powered by the model named ${input.model}.`,
@@ -95,6 +108,7 @@ export function buildDynamicEnvironmentPrompt(input: DynamicEnvironmentInput): s
     `  Platform: ${platform}`,
     `  Shell: ${shell}`,
     `  Today's date: ${now.toDateString()}`,
+    ...gogLines,
     "</env>",
   ].join("\n");
 }
@@ -192,6 +206,7 @@ export function createZenThink(config: ZenThinkConfig): ThinkFn {
   const system = buildSystemPrompt(config.systemPrompt ?? defaultSystemPrompt, {
     model: config.model,
     cwd,
+    ...(config.gogStatus ? { gogStatus: config.gogStatus } : {}),
   });
 
   return async (input) => {

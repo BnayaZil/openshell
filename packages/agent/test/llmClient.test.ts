@@ -118,6 +118,13 @@ describe("llmClient prompt helpers", () => {
       platform: "darwin",
       shell: "/bin/zsh",
       now: new Date("2026-02-20T00:00:00Z"),
+      gogStatus: {
+        integrationStatus: "ready",
+        pullModeEnabled: true,
+        subscribeModeEnabled: false,
+        proxyUrl: "http://127.0.0.1:8791",
+        skillConfigured: true,
+      },
     });
 
     expect(prompt).toContain("You are powered by the model named gpt-4.1-mini.");
@@ -126,6 +133,9 @@ describe("llmClient prompt helpers", () => {
     expect(prompt).toContain("Platform: darwin");
     expect(prompt).toContain("Shell: /bin/zsh");
     expect(prompt).toContain("Today's date:");
+    expect(prompt).toContain("Gog integration status: ready");
+    expect(prompt).toContain("Gog pull mode enabled: yes");
+    expect(prompt).toContain("Gog subscribe mode enabled: no");
   });
 
   it("appends environment data to base system prompt", () => {
